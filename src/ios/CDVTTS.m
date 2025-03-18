@@ -22,6 +22,23 @@
     synthesizer.delegate = self;
 }
 
+- (void)setupSession {
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    [audioSession setActive:NO withOptions:0 error:nil];
+    [audioSession setCategory:AVAudioSessionCategoryAmbient
+                  withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker
+                        error:nil];
+    [audioSession setMode:AVAudioSessionModeMeasurement error:nil];
+    [audioSession setActive:YES withOptions:0 error:nil];
+}
+
+- (void)deactivateAudioSession:(CDVInvokedUrlCommand*)command {
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    [audioSession setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 - (void)speechSynthesizer:(AVSpeechSynthesizer*)synthesizer didFinishSpeechUtterance:(AVSpeechUtterance*)utterance {
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     if (lastCallbackId) {
@@ -31,11 +48,6 @@
         [self.commandDelegate sendPluginResult:result callbackId:callbackId];
         callbackId = nil;
     }
-    
-    [[AVAudioSession sharedInstance] setActive:NO withOptions:0 error:nil];
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient
-      withOptions: 0 error: nil];
-    [[AVAudioSession sharedInstance] setActive:YES withOptions: 0 error:nil];
 }
 
 - (void)speak:(CDVInvokedUrlCommand*)command {
@@ -44,10 +56,9 @@
     }
 
     callbackId = command.callbackId;
-    [[AVAudioSession sharedInstance] setActive:NO withOptions:0 error:nil];
-    [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback
-        withOptions:AVAudioSessionCategoryOptionDuckOthers error:nil];
-
+    
+    [self setupSession];
+    
     NSDictionary* options = [command.arguments objectAtIndex:0];
 
     NSString* text = [options objectForKey:@"text"];
