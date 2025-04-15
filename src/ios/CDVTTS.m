@@ -25,10 +25,10 @@
 - (void)setupSession {
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     [audioSession setActive:NO withOptions:0 error:nil];
-    [audioSession setCategory:AVAudioSessionCategoryAmbient
+    [audioSession setCategory:AVAudioSessionCategoryPlayback
                   withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker
                         error:nil];
-    [audioSession setMode:AVAudioSessionModeMeasurement error:nil];
+    [audioSession setMode:AVAudioSessionModeSpokenAudio error:nil];
     [audioSession setActive:YES withOptions:0 error:nil];
 }
 
