@@ -26,20 +26,26 @@
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     [audioSession setActive:NO withOptions:0 error:nil];
     [audioSession setCategory:AVAudioSessionCategoryPlayback
-                  withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker
+                  withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionDuckOthers
                         error:nil];
     [audioSession setMode:AVAudioSessionModeSpokenAudio error:nil];
     [audioSession setActive:YES withOptions:0 error:nil];
 }
 
 - (void)deactivateAudioSession:(CDVInvokedUrlCommand*)command {
-    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
-    [audioSession setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+    [self deactivateAudioSession];
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
+- (void)deactivateAudioSession {
+    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
+    [audioSession setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
+}
+
 - (void)speechSynthesizer:(AVSpeechSynthesizer*)synthesizer didFinishSpeechUtterance:(AVSpeechUtterance*)utterance {
+    [self deactivateAudioSession];
+    
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     if (lastCallbackId) {
         [self.commandDelegate sendPluginResult:result callbackId:lastCallbackId];
@@ -48,6 +54,10 @@
         [self.commandDelegate sendPluginResult:result callbackId:callbackId];
         callbackId = nil;
     }
+}
+
+- (void)speechSynthesizer:(AVSpeechSynthesizer *) synthesizer didCancelSpeechUtterance:(AVSpeechUtterance *) utterance {
+    [self deactivateAudioSession];
 }
 
 - (void)speak:(CDVInvokedUrlCommand*)command {
